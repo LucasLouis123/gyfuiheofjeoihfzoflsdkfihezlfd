@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>x1nf selfbot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: #0f0f13;
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: #1a1b1e;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .command-section {
+            background: #1a1b1e;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .command-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .command-card {
+            background: #2c2d30;
+            padding: 20px;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .command-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .command-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #5865f2;
+        }
+
+        .command-options {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .command-options.active {
+            display: block;
+        }
+
+        button {
+            background: #5865f2;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: #4752c4;
+            transform: translateY(-2px);
+        }
+
+        .status-bar {
+            background: #2c2d30;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #f04747;
+            transition: background 0.3s;
+        }
+
+        .status-indicator.online {
+            background: #43b581;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: #1a1b1e;
+            border: 2px solid #3f4146;
+            color: white;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            border-color: #5865f2;
+            outline: none;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: #5865f2;
+            color: white;
+            border-radius: 8px;
+            transform: translateX(200%);
+            transition: transform 0.3s;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #5865f2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .contact-container {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .contact-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #5865f2;
+            transition: transform 0.2s;
+        }
+
+        .contact-item:hover {
+            transform: translateY(-5px);
+            color: #5865f2;
+        }
+
+        .contact-item i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-item span {
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>x1nf selfbot</h1>
+            <p>Premium Commands</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-indicator" id="statusIndicator"></div>
+            <span id="statusText">Disconnected</span>
+        </div>
+
+        <div class="command-section" id="authSection">
+            <h2>Authentication</h2>
+            <input type="password" id="tokenInput" placeholder="Enter your Discord token">
+            <button onclick="authenticate()">Connect</button>
+        </div>
+
+        <div class="command-section" id="commandSection" style="display: none;">
+            <div class="command-grid">
+                <!-- Message Management -->
+                <div class="command-card">
+                    <div class="command-title">Message Tools</div>
+                    <button onclick="showOptions('messageOptions')">Open</button>
+                    <div class="command-options" id="messageOptions">
+                        <button onclick="executeCommand('clear')">Clear Messages</button>
+                        <button onclick="executeCommand('embed')">Send Embed</button>
+                        <button onclick="executeCommand('purge')">Purge Messages</button>
+                        <button onclick="executeCommand('spam')">Spam Messages</button>
+                    </div>
+                </div>
+
+                <!-- Server Controls -->
+                <div class="command-card">
+                    <div class="command-title">Server Controls</div>
+                    <button onclick="showOptions('serverOptions')">Open</button>
+                    <div class="command-options" id="serverOptions">
+                        <button onclick="executeCommand('channels')">Manage Channels</button>
+                        <button onclick="executeCommand('roles')">Manage Roles</button>
+                        <button onclick="executeCommand('lock')">Server Lock</button>
+                        <button onclick="executeCommand('nuke')">Nuke Server</button>
+                    </div>
+                </div>
+
+                <!-- User Actions -->
+                <div class="command-card">
+                    <div class="command-title">User Actions</div>
+                    <button onclick="showOptions('userOptions')">Open</button>
+                    <div class="command-options" id="userOptions">
+                        <button onclick="executeCommand('massdm')">Mass DM</button>
+                        <button onclick="executeCommand('friend')">Friend Manager</button>
+                        <button onclick="executeCommand('status')">Status Changer</button>
+                        <button onclick="executeCommand('massban')">Mass Ban</button>
+                    </div>
+                </div>
+
+                <!-- Raid Tools -->
+                <div class="command-card">
+                    <div class="command-title">Raid Tools</div>
+                    <button onclick="showOptions('raidOptions')">Open</button>
+                    <div class="command-options" id="raidOptions">
+                        <button onclick="executeCommand('masschannel')">Mass Channels</button>
+                        <button onclick="executeCommand('massrole')">Mass Roles</button>
+                        <button onclick="executeCommand('deletechannels')">Delete All Channels</button>
+                        <button onclick="executeCommand('deleteroles')">Delete All Roles</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="command-section">
+    <h2>Support & Contact</h2>
+    <div class="contact-container">
+        <a href="mailto:x1nf@ddoslist.lol" class="contact-item">
+            <i class="fas fa-envelope"></i>
+            <span>Email Support</span>
+        </a>
+        
+        <a href="https://discord.gg/x1nf" target="_blank" class="contact-item">
+            <i class="fab fa-discord"></i>
+            <span>Join Discord</span>
+        </a>
+        
+        <a href="https://t.me/x1nff" target="_blank" class="contact-item">
+            <i class="fab fa-telegram"></i>
+            <span>Telegram</span>
+        </a>
+    </div>
+</div>
+
+</div>
+
+<div class="notification" id="notification"></div>
+
+
+    <script>
+        let token = '';
+        let isConnected = false;
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => notification.classList.remove('show'), 3000);
+        }
+
+        function showOptions(id) {
+            const options = document.getElementById(id);
+            options.classList.toggle('active');
+        }
+
+        async function authenticate() {
+            const tokenInput = document.getElementById('tokenInput');
+            const statusText = document.getElementById('statusText');
+            token = tokenInput.value;
+            
+            try {
+                const response = await fetch('https://discord.com/api/v9/users/@me', {
+                    headers: { 'Authorization': token }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    isConnected = true;
+                    document.getElementById('authSection').style.display = 'none';
+                    document.getElementById('commandSection').style.display = 'block';
+                    document.getElementById('statusIndicator').classList.add('online');
+                    statusText.textContent = `Connected as ${data.username}`;
+                    showNotification('Successfully connected!');
+                } else {
+                    throw new Error('Invalid token');
+                }
+            } catch (error) {
+                showNotification('Connection failed: ' + error.message);
+            }
+        }
+
+        async function executeCommand(command) {
+            if (!isConnected) {
+                showNotification('Please connect first!');
+                return;
+            }
+
+            try {
+                switch(command) {
+                    case 'clear':
+                        const amount = prompt('Enter number of messages to clear:');
+                        if (amount) await clearMessages(amount);
+                        break;
+                    case 'embed':
+                        const title = prompt('Enter embed title:');
+                        const description = prompt('Enter embed description:');
+                        if (title && description) await sendEmbed(title, description);
+                        break;
+                    case 'spam':
+                        const message = prompt('Enter message to spam:');
+                        const count = prompt('Enter number of times:');
+                        if (message && count) await spamMessages(message, count);
+                        break;
+                    case 'massdm':
+                        const dmMessage = prompt('Enter message to mass DM:');
+                        if (dmMessage) await massDM(dmMessage);
+                        break;
+                    case 'nuke':
+                        if (confirm('Are you sure you want to nuke this server?')) {
+                            await nukeServer();
+                        }
+                        break;
+                    // Add more command cases as needed
+                }
+                showNotification('Command executed successfully!');
+            } catch (error) {
+                showNotification('Command failed: ' + error.message);
+            }
+        }
+
+        async function clearMessages(amount) {
+            const channelId = prompt('Enter channel ID:');
+            if (!channelId) return;
+
+            const messages = await fetch(`https://discord.com/api/v9/channels/${channelId}/messages?limit=${amount}`, {
+                headers: { 'Authorization': token }
+            }).then(res => res.json());
+
+            for (const message of messages) {
+                await fetch(`https://discord.com/api/v9/channels/${channelId}/messages/${message.id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': token }
+                });
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+
+        async function sendEmbed(title, description) {
+            const channelId = prompt('Enter channel ID:');
+            if (!channelId) return;
+
+            await fetch(`https://discord.com/api/v9/channels/${channelId}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    embed: {
+                        title,
+                        description,
+                        color: 0x5865f2
+                    }
+                })
+            });
+        }
+
+        async function spamMessages(message, count) {
+            const channelId = prompt('Enter channel ID:');
+            if (!channelId) return;
+
+            for (let i = 0; i < count; i++) {
+                await fetch(`https://discord.com/api/v9/channels/${channelId}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ content: message })
+                });
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+
+        async function massDM(message) {
+            const friends = await fetch('https://discord.com/api/v9/users/@me/relationships', {
+                headers: { 'Authorization': token }
+            }).then(res => res.json());
+
+            for (const friend of friends) {
+                try {
+                    const dm = await fetch('https://discord.com/api/v9/users/@me/channels', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ recipient_id: friend.id })
+                    }).then(res => res.json());
+
+                    await fetch(`https://discord.com/api/v9/channels/${dm.id}/messages`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ content: message })
+                    });
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                } catch (error) {
+                    continue;
+                }
+            }
+        }
+
+        async function nukeServer() {
+            const serverId = prompt('Enter server ID:');
+            if (!serverId) return;
+
+            // Delete all channels
+            const channels = await fetch(`https://discord.com/api/v9/guilds/${serverId}/channels`, {
+                headers: { 'Authorization': token }
+            }).then(res => res.json());
+
+            for (const channel of channels) {
+                await fetch(`https://discord.com/api/v9/channels/${channel.id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': token }
+                });
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            // Delete all roles
+            const roles = await fetch(`https://discord.com/api/v9/guilds/${serverId}/roles`, {
+                headers: { 'Authorization': token }
+            }).then(res => res.json());
+
+            for (const role of roles) {
+                await fetch(`https://discord.com/api/v9/guilds/${serverId}/roles/${role.id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': token }
+                });
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+    </script>
+</body>
+</html>
