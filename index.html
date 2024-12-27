@@ -367,6 +367,12 @@
                             await nukeServer();
                         }
                         break;
+                    case 'status':
+                        const status = prompt('Enter status text:');
+                        if(status) {
+                        updateStatus(status);
+                    }
+                    break;
                     // Add more command cases as needed
                 }
                 showNotification('Command executed successfully!');
@@ -410,6 +416,25 @@
                     }
                 })
             });
+        }
+
+        async function updateStatus(status) {
+            try {
+                await fetch('https://discord.com/api/v9/users/@me/settings', {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        custom_status: {
+                            text: status
+                        }
+                    })
+                });
+            } catch (error) {
+                alert('Failed to update status');
+            }
         }
 
         async function spamMessages(message, count) {
